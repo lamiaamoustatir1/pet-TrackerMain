@@ -151,7 +151,7 @@ class _SellAnimalConfirmationScreenState extends State<SellAnimalConfirmationScr
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Vente confirmée avec succès !'),
-            backgroundColor: Colors.green,
+            backgroundColor: Color(0xFFA37551),
           ),
         );
         Navigator.of(context).pop();
@@ -223,7 +223,7 @@ class _SellAnimalConfirmationScreenState extends State<SellAnimalConfirmationScr
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _confirmSale,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: const Color(0xFFA37551),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: _isLoading

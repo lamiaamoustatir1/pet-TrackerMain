@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' show GetOptions;
+import 'market_animal_detail_screen.dart';
 
 class MarketScreen extends StatefulWidget {
   const MarketScreen({super.key});
@@ -85,6 +86,18 @@ class _MarketScreenState extends State<MarketScreen> {
           return const Center(child: CircularProgressIndicator());
         }
 
+        // LOG DIAGNOSTIC AUTOMATIQUE
+        debugPrint('=== [DIAG MARKET] Nouvelle mise à jour du StreamBuilder ===');
+        if (snapshot.hasData) {
+          for (var doc in snapshot.data!.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            debugPrint('Animal ID: \\${doc.id} | isForSale: \\${data['isForSale']} | nom: \\${data['nom']}');
+          }
+        } else {
+          debugPrint('=== [DIAG MARKET] Pas de données dans le snapshot ===');
+        }
+        debugPrint('=== [DIAG MARKET] Fin de la mise à jour ===');
+
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return const Center(child: Text('Aucun animal en vente pour le moment'));
         }
@@ -96,63 +109,127 @@ class _MarketScreenState extends State<MarketScreen> {
             final animalData = animalDoc.data() as Map<String, dynamic>;
             final isCurrentUser = animalDoc.reference.parent.parent?.id == _auth.currentUser?.uid;
 
+            // Palette
+            const brown = Color(0xFFA37551);
+            const background = Color(0xFFFEF9EA);
+            const cardColor = Colors.white;
+
             return Card(
-              margin: const EdgeInsets.all(8.0),
-              child: ListTile(
-                leading: (animalData['photoUrl'] != null && animalData['photoUrl'].toString().isNotEmpty)
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: Image.network(
-                          animalData['photoUrl'],
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            width: 60,
-                            height: 60,
-                            color: Colors.grey[200],
-                            child: const Icon(Icons.pets, size: 30, color: Colors.grey),
-                          ),
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                              width: 60,
-                              height: 60,
-                              color: Colors.grey[200],
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  value: loadingProgress.expectedTotalBytes != null
-                                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                                      : null,
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              elevation: 3,
+              color: cardColor,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MarketAnimalDetailScreen(animalData: animalData),
+                    ),
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Photo (plus petite)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: animalData['photoUrl'] != null && animalData['photoUrl'].toString().isNotEmpty
+                            ? Image.network(
+                                animalData['photoUrl'],
+                                width: 56,
+                                height: 56,
+                                fit: BoxFit.cover,
+                              )
+                            : Container(
+                                width: 56,
+                                height: 56,
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.pets, size: 28, color: Colors.grey),
+                              ),
+                      ),
+                      const SizedBox(width: 14),
+                      // Infos principales en colonne (vertical)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(
+                              children: [
+                                Text('Nom : ', style: TextStyle(color: brown, fontWeight: FontWeight.w600, fontSize: 15)),
+                                Expanded(
+                                  child: Text(
+                                    animalData['nom'] ?? '',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: brown),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Text('Espèce : ', style: TextStyle(color: brown, fontWeight: FontWeight.w600, fontSize: 14)),
+                                if (animalData['espece'] != null)
+                                  Text('${animalData['espece']}', style: TextStyle(color: brown, fontSize: 14)),
+                                if (animalData['race'] != null) ...[
+                                  Text('   Race : ', style: TextStyle(color: brown, fontWeight: FontWeight.w600, fontSize: 14)),
+                                  Text('${animalData['race']}', style: TextStyle(color: brown, fontSize: 14)),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.cake, size: 15, color: brown),
+                                const SizedBox(width: 3),
+                                Text('Âge : ', style: TextStyle(color: brown, fontWeight: FontWeight.w600, fontSize: 13)),
+                                Text('${animalData['age'] ?? '-'}', style: TextStyle(color: brown, fontSize: 13)),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Text('Prix : ', style: TextStyle(color: brown, fontWeight: FontWeight.w600, fontSize: 15)),
+                                Text(
+                                  animalData['price'] != null ? '${animalData['price']} €' : '-',
+                                  style: const TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 17,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                            if (!isCurrentUser)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: ElevatedButton(
+                                  onPressed: () => _showBuyDialog(context, animalDoc.reference, animalData),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: brown,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                                  ),
+                                  child: const Text('Acheter'),
                                 ),
                               ),
-                            );
-                          },
+                          ],
                         ),
-                      )
-                    : Container(
-                        width: 60,
-                        height: 60,
-                        color: Colors.grey[200],
-                        child: const Icon(Icons.pets, size: 30, color: Colors.grey),
                       ),
-                title: Text(animalData['nom'] ?? 'Sans nom'),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (animalData['race'] != null) Text('Race: ${animalData['race']}'),
-                    if (animalData['age'] != null) Text('Âge: ${animalData['age']}'),
-                    Text('Prix: ${animalData['price']} €'),
-                    if (animalData['ownerName'] != null)
-                      Text('Vendeur: ${animalData['ownerName']}'),
-                  ],
+                      const SizedBox(width: 6),
+                      const Icon(Icons.arrow_forward_ios, size: 18, color: brown),
+                    ],
+                  ),
                 ),
-                trailing: isCurrentUser
-                    ? const Text('Votre annonce')
-                    : ElevatedButton(
-                        onPressed: () => _showBuyDialog(context, animalDoc.reference, animalData),
-                        child: const Text('Acheter'),
-                      ),
               ),
             );
           },
@@ -161,12 +238,8 @@ class _MarketScreenState extends State<MarketScreen> {
     );
   }
 
-  final _buyerEmailController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-
   @override
   void dispose() {
-    _buyerEmailController.dispose();
     super.dispose();
   }
 
@@ -202,6 +275,10 @@ class _MarketScreenState extends State<MarketScreen> {
       }
       return;
     }
+
+    // Déclarer les contrôleurs et clés dans la méthode
+    final _buyerEmailController = TextEditingController();
+    final _formKey = GlobalKey<FormState>();
 
     // Demander l'email de l'acheteur
     final buyerEmail = await showDialog<String>(
@@ -254,7 +331,7 @@ class _MarketScreenState extends State<MarketScreen> {
                 Navigator.of(context).pop(_buyerEmailController.text.trim());
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFA37551)),
             child: const Text('Confirmer la demande'),
           ),
         ],
@@ -403,12 +480,9 @@ class _MarketScreenState extends State<MarketScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Demande d\'achat envoyée au vendeur !'),
-            backgroundColor: Colors.green,
+            backgroundColor: Color(0xFFA37551),
           ),
         );
-        
-        // Fermer le dialogue d'achat
-        Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {

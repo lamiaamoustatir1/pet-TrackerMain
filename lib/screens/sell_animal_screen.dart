@@ -29,7 +29,7 @@ class _SellAnimalScreenState extends State<SellAnimalScreen> {
   @override
   void initState() {
     super.initState();
-    _isForSale = widget.isForSale;
+    _isForSale = true;
     if (widget.currentPrice != null) {
       _priceController.text = widget.currentPrice!.toStringAsFixed(2);
     }
@@ -42,6 +42,12 @@ class _SellAnimalScreenState extends State<SellAnimalScreen> {
   }
 
   Future<void> _updateSaleStatus() async {
+    if (!_isForSale) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Activez le switch pour mettre en vente l\'animal.'), backgroundColor: Colors.orange),
+      );
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -159,19 +165,22 @@ class _SellAnimalScreenState extends State<SellAnimalScreen> {
                 ),
               ],
               const Spacer(),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _updateSaleStatus,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _isForSale ? Colors.green : Colors.orange,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text(_isForSale ? 'Mettre en vente' : 'Retirer de la vente'),
-              ),
             ],
           ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+        child: ElevatedButton(
+          onPressed: _isLoading ? null : _updateSaleStatus,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _isForSale ? const Color(0xFFA37551) : Colors.orange,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 15),
+          ),
+          child: _isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : Text(_isForSale ? 'Mettre en vente' : 'Retirer de la vente'),
         ),
       ),
     );

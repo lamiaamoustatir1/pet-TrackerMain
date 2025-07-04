@@ -18,6 +18,24 @@ class DetailsScreen extends StatefulWidget {
 }
 
 class _DetailsScreenState extends State<DetailsScreen> {
+  // Fonction utilitaire pour calculer l'âge à partir de la date de naissance
+  String _calculateAge(dynamic dateNaissance) {
+    if (dateNaissance == null) return '';
+    DateTime? birthDate;
+    if (dateNaissance is String && dateNaissance.isNotEmpty) {
+      birthDate = DateTime.tryParse(dateNaissance);
+    } else if (dateNaissance is Timestamp) {
+      birthDate = dateNaissance.toDate();
+    }
+    if (birthDate == null) return '';
+    final now = DateTime.now();
+    int years = now.year - birthDate.year;
+    if (now.month < birthDate.month || (now.month == birthDate.month && now.day < birthDate.day)) {
+      years--;
+    }
+    return '$years ans';
+  }
+
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
@@ -28,7 +46,24 @@ class _DetailsScreenState extends State<DetailsScreen> {
     debugPrint('Utilisateur actuel: ${FirebaseAuth.instance.currentUser?.uid}');
     
     return Scaffold(
-      appBar: AppBar(title: const Text("Détails de l'animal")),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFFEF9EA),
+        elevation: 0,
+        centerTitle: true,
+        titleSpacing: 0,
+        title: Text(
+          "Détails de l'animal",
+          style: TextStyle(
+            color: const Color(0xFFA37551),
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: const Color(0xFFA37551)),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: nfcText.isEmpty
           ? const Center(child: Text('Aucun code NFC lu.'))
           : FutureBuilder<QuerySnapshot>(
@@ -50,11 +85,213 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 final animal = snapshot.data!.docs.first;
                 final animalData = animal.data() as Map<String, dynamic>;
                 final userRef = animal.reference.parent.parent;
-                
-                debugPrint('Données de l\'animal: $animalData');
-                debugPrint('Référence de l\'animal: ${animal.reference.path}');
-                debugPrint('Référence de l\'utilisateur: ${userRef?.path}');
-
+                final String? ownerId = userRef?.id;
+                final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
+                final bool isGuest = args != null && args['isGuest'] == true;
+                final bool isOwner = currentUserId != null && ownerId != null && currentUserId == ownerId;
+                if (isGuest || !isOwner) {
+                  // Maquette simplifiée améliorée pour guest ou non-propriétaire
+                  return FutureBuilder<DocumentSnapshot>(
+                    future: userRef?.get(),
+                    builder: (context, userSnap) {
+                      if (userSnap.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (!userSnap.hasData || !userSnap.data!.exists) {
+                        return const Center(child: Text('Propriétaire inconnu.'));
+                      }
+                      final userData = userSnap.data!.data() as Map<String, dynamic>;
+                      final Color brown = const Color(0xFFA37551);
+                      final Color cardColor = const Color(0xFFFDFCFB);
+                      final Color background = const Color(0xFFFEF9EA);
+                      final Color infoCard = const Color(0xFFEAD7C0);
+                      return Container(
+                        color: background,
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(18),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                                decoration: BoxDecoration(
+                                  color: cardColor,
+                                  borderRadius: BorderRadius.circular(22),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.07),
+                                      blurRadius: 14,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.person, color: brown),
+                                        const SizedBox(width: 8),
+                                        Text("Informations du propriétaire", style: TextStyle(fontWeight: FontWeight.bold, color: brown, fontSize: 17)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.badge, size: 20),
+                                        const SizedBox(width: 6),
+                                        Text('Nom : ', style: TextStyle(fontWeight: FontWeight.bold, color: brown)),
+                                      ],
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 32.0, bottom: 8),
+                                      child: Text('${userData['nom'] ?? ''} ${userData['prenom'] ?? ''}', style: const TextStyle(fontSize: 16)),
+                                    ),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.email, size: 20),
+                                        const SizedBox(width: 6),
+                                        Text('Contact : ', style: TextStyle(fontWeight: FontWeight.bold, color: brown)),
+                                      ],
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 32.0, bottom: 8),
+                                      child: Text(userData['email'] ?? '', style: const TextStyle(fontSize: 16)),
+                                    ),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.phone, size: 20),
+                                        const SizedBox(width: 6),
+                                        Text('Téléphone : ', style: TextStyle(fontWeight: FontWeight.bold, color: brown)),
+                                      ],
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 32.0, bottom: 8),
+                                      child: Text(userData['telephone'] ?? '', style: const TextStyle(fontSize: 16)),
+                                    ),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.home, size: 20),
+                                        const SizedBox(width: 6),
+                                        Text('Adresse : ', style: TextStyle(fontWeight: FontWeight.bold, color: brown)),
+                                      ],
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 32.0, bottom: 8),
+                                      child: Text(userData['adresse'] ?? '', style: const TextStyle(fontSize: 16)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 28),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+                                decoration: BoxDecoration(
+                                  color: infoCard,
+                                  borderRadius: BorderRadius.circular(22),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 8.0),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Icon(Icons.pets, color: brown),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'Informations générales sur l\'animal',
+                                              style: TextStyle(fontWeight: FontWeight.bold, color: brown, fontSize: 17),
+                                              softWrap: true,
+                                              overflow: TextOverflow.visible,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.pets, size: 20),
+                                        const SizedBox(width: 6),
+                                        Text('Nom de l\'animal : ', style: TextStyle(fontWeight: FontWeight.bold, color: brown)),
+                                      ],
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 32.0, bottom: 8),
+                                      child: Text(animalData['nom'] ?? '', style: const TextStyle(fontSize: 16)),
+                                    ),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.category, size: 20, color: brown),
+                                        const SizedBox(width: 6),
+                                        Text('Espèce : ', style: TextStyle(fontWeight: FontWeight.bold, color: brown)),
+                                      ],
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 32.0, bottom: 8),
+                                      child: Text(animalData['espece'] ?? '', style: const TextStyle(fontSize: 16)),
+                                    ),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.flag, size: 20, color: brown),
+                                        const SizedBox(width: 6),
+                                        Text('Race : ', style: TextStyle(fontWeight: FontWeight.bold, color: brown)),
+                                      ],
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 32.0, bottom: 8),
+                                      child: Text(animalData['race'] ?? '', style: const TextStyle(fontSize: 16)),
+                                    ),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.transgender, size: 20, color: brown),
+                                        const SizedBox(width: 6),
+                                        Text('Sexe : ', style: TextStyle(fontWeight: FontWeight.bold, color: brown)),
+                                      ],
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 32.0, bottom: 8),
+                                      child: Text(animalData['sex'] ?? '', style: const TextStyle(fontSize: 16)),
+                                    ),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.cake, size: 20, color: brown),
+                                        const SizedBox(width: 6),
+                                        Text('Âge : ', style: TextStyle(fontWeight: FontWeight.bold, color: brown)),
+                                      ],
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 32.0, bottom: 8),
+                                      child: Text(
+                                        (animalData['dateNaissance'] != null)
+                                          ? _calculateAge(animalData['dateNaissance'])
+                                          : '',
+                                        style: const TextStyle(fontSize: 16)),
+                                    ),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.description, size: 20, color: brown),
+                                        const SizedBox(width: 6),
+                                        Text('Description : ', style: TextStyle(fontWeight: FontWeight.bold, color: brown)),
+                                      ],
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 32.0, bottom: 8),
+                                      child: Text(animalData['description'] ?? '', style: const TextStyle(fontSize: 16)),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                }
                 return FutureBuilder<DocumentSnapshot>(
                   future: userRef?.get(),
                   builder: (context, userSnap) {
@@ -110,7 +347,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                                     style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.green,
+                                      color: Color(0xFFA37551),
                                     ),
                                   ),
                                 ],
@@ -122,14 +359,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.green,
+                                    color: Color(0xFFA37551),
                                   ),
                                 ),
                                 const SizedBox(height: 10),
                                 ElevatedButton(
                                   onPressed: () => _buyAnimal(context, animal.reference, animalData, userData),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
+                                    backgroundColor: const Color(0xFFA37551),
                                     foregroundColor: Colors.white,
                                   ),
                                   child: const Text('Acheter cet animal'),
@@ -183,7 +420,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFA37551)),
               child: const Text('Confirmer'),
             ),
           ],

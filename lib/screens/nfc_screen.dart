@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:nfc_manager/nfc_manager.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'animal_detail_screen.dart';
 
 
 class NfcScreen extends StatefulWidget {
@@ -82,30 +84,48 @@ class _NfcScreenState extends State<NfcScreen> {
                   final animalDoc = animalSnap.docs.first;
                   // parent.parent = document user
                   ownerId = animalDoc.reference.parent.parent?.id;
-                }
 
-                // Enregistrer l'alerte dans la sous-collection du propriétaire
-                if (ownerId != null) {
-                  await FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(ownerId)
-                    .collection('alerts')
-                    .add({
-                      'nfcCode': nfcText.trim().toLowerCase(),
-                      'timestamp': FieldValue.serverTimestamp(),
-                      'latitude': position?.latitude,
-                      'longitude': position?.longitude,
-                      'animalId': animalSnap.docs.first.id,
-                    });
-                }
+                  // Navigation selon le propriétaire
+                  final currentUser = FirebaseAuth.instance.currentUser;
+                  final animalData = animalDoc.data() as Map<String, dynamic>;
 
-                Navigator.pushReplacementNamed(
-                  context,
-                  '/details',
-                  arguments: {
-                    'nfcText': nfcText,
-                  },
-                );
+                  if (ownerId != null) {
+                    await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(ownerId)
+                      .collection('alerts')
+                      .add({
+                        'nfcCode': nfcText.trim().toLowerCase(),
+                        'timestamp': FieldValue.serverTimestamp(),
+                        'latitude': position?.latitude,
+                        'longitude': position?.longitude,
+                        'animalId': animalDoc.id,
+                      });
+                  }
+
+                  if (currentUser != null && ownerId == currentUser.uid) {
+                    // Propriétaire : page détails propriétaire
+                    if (mounted) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AnimalDetailScreen(animal: animalDoc),
+                        ),
+                      );
+                    }
+                  } else {
+                    // Non-propriétaire : page détails publique
+                    if (mounted) {
+                      Navigator.pushReplacementNamed(
+                        context,
+                        '/details',
+                        arguments: {
+                          'nfcText': nfcText,
+                        },
+                      );
+                    }
+                  }
+                }
               }
             }
           } catch (e) {
@@ -138,27 +158,97 @@ class _NfcScreenState extends State<NfcScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final Color brown = const Color(0xFFA37551);
+    final Color background = const Color(0xFF7B6A5E);
+    final Color cardColor = Colors.white;
+    final Color lightBeige = const Color(0xFFEAD7C0);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_isScanning) _startNfcScan();
+    });
     return Scaffold(
-      appBar: AppBar(title: const Text('Lecture NFC')),
+      backgroundColor: background,
+      appBar: AppBar(
+        backgroundColor: background,
+        elevation: 0,
+        centerTitle: true,
+        titleSpacing: 0,
+        title: Text(
+          'Lecture NFC',
+          style: TextStyle(
+            color: lightBeige,
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: lightBeige),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Approchez la puce NFC de l\'appareil'),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _startNfcScan,
-              child: const Text("Démarrer la lecture"),
-            ),
-            const SizedBox(height: 16),
-            if (_lastNfcCode != null)
-              Text('Code NFC lu : $_lastNfcCode', style: const TextStyle(fontWeight: FontWeight.bold)),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(_error!, style: const TextStyle(color: Colors.red)),
+        child: Container(
+          width: 350,
+          constraints: const BoxConstraints(maxWidth: 350),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 36),
+          decoration: BoxDecoration(
+            color: cardColor,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.10),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
               ),
-          ],
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Prêt à scanner',
+                style: TextStyle(
+                  color: brown,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 26,
+                  letterSpacing: 0.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 28),
+              Icon(Icons.nfc, color: Colors.blue, size: 110),
+              const SizedBox(height: 36),
+              Text(
+                'Approchez votre appareil du tag NFC',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 15,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: TextButton.styleFrom(
+                    backgroundColor: lightBeige,
+                    foregroundColor: brown,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(32),
+                    ),
+                    textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  child: const Text('annuler'),
+                ),
+              ),
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 18.0),
+                  child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                ),
+            ],
+          ),
         ),
       ),
     );

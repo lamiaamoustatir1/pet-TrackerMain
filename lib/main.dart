@@ -32,19 +32,22 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF4CAF50), // Vert principal
-          primary: const Color(0xFF4CAF50),
-          secondary: const Color(0xFF8BC34A),
-          background: Colors.grey[100],
+          seedColor: const Color(0xFFA37551), // Nouvelle couleur principale
+          primary: const Color(0xFFA37551),
+          secondary: const Color(0xFFA37551),
+          background: const Color(0xFFFEF9EA), // Nouvelle couleur de fond
+          surface: const Color(0xFFFEF9EA),
         ),
+        scaffoldBackgroundColor: const Color(0xFFFEF9EA), // Couleur de fond pour tous les Scaffold
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF4CAF50),
+          backgroundColor: Color(0xFFA37551),
           foregroundColor: Colors.white,
           elevation: 0,
+          iconTheme: IconThemeData(color: Colors.white),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4CAF50),
+            backgroundColor: const Color(0xFFA37551),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             shape: RoundedRectangleBorder(
@@ -54,16 +57,33 @@ class MyApp extends StatelessWidget {
         ),
         inputDecorationTheme: InputDecorationTheme(
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.brown),
           ),
           filled: true,
           fillColor: Colors.white,
+          floatingLabelBehavior: FloatingLabelBehavior.always,
+          labelStyle: TextStyle(fontSize: 15, color: Colors.brown, fontWeight: FontWeight.w500),
+          contentPadding: EdgeInsets.symmetric(vertical: 18, horizontal: 14),
         ),
         cardTheme: ThemeData().cardTheme.copyWith(
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          color: Colors.white,
+        ),
+        iconTheme: const IconThemeData(
+          color: Color(0xFFA37551), // Couleur des icônes
+        ),
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: Color(0xFFA37551),
+          foregroundColor: Colors.white,
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Colors.white,
+          selectedItemColor: Color(0xFFA37551),
+          unselectedItemColor: Colors.grey,
         ),
       ),
       // Par défaut, on démarre sur SplashScreen

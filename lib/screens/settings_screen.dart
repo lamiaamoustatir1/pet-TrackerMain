@@ -90,72 +90,186 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final Color brown = const Color(0xFFA37551);
+    final Color background = const Color(0xFFFEF9EA);
+    final Color fieldColor = const Color(0xFFEAD7C0);
     return Scaffold(
+      backgroundColor: background,
       appBar: AppBar(
-        title: const Text('Settings'),
+        backgroundColor: background,
+        elevation: 0,
+        centerTitle: true,
+        titleSpacing: 0,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(width: 8),
+            Text('Paramètres', style: TextStyle(color: brown, fontWeight: FontWeight.bold, fontSize: 24)),
+          ],
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back, color: brown),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(24.0),
+          : Center(
               child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 16),
-                    const Text('PET', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: const [
-                        Icon(Icons.settings, color: Colors.brown),
-                        SizedBox(width: 8),
-                        Text('Settings', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                child: Container(
+                  width: 400,
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                  decoration: BoxDecoration(
+                    color: background,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 16),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('Nom de famille', style: TextStyle(color: brown, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: _fullNameController,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: fieldColor,
+                          hintText: 'Entrez votre nom de famille...',
+                          hintStyle: TextStyle(color: brown.withOpacity(0.7)),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('Prénom', style: TextStyle(color: brown, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: _usernameController,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: fieldColor,
+                          hintText: 'Entrez votre prénom...',
+                          hintStyle: TextStyle(color: brown.withOpacity(0.7)),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('Email', style: TextStyle(color: brown, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: fieldColor,
+                          hintText: 'Entrez votre email...',
+                          hintStyle: TextStyle(color: brown.withOpacity(0.7)),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('Numéro de téléphone', style: TextStyle(color: brown, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: _phoneController,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: fieldColor,
+                          hintText: '+212...',
+                          hintStyle: TextStyle(color: brown.withOpacity(0.7)),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text('CIN', style: TextStyle(color: brown, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: _cinController,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: fieldColor,
+                          hintText: 'Entrez votre CIN...',
+                          hintStyle: TextStyle(color: brown.withOpacity(0.7)),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      if (_error != null) ...[
+                        Text(_error!, style: const TextStyle(color: Colors.red)),
+                        const SizedBox(height: 12),
                       ],
-                    ),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: _usernameController,
-                      decoration: const InputDecoration(labelText: 'Username...'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(labelText: 'email...'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _fullNameController,
-                      decoration: const InputDecoration(labelText: 'full name...'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _cinController,
-                      decoration: const InputDecoration(labelText: 'National id...'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _phoneController,
-                      decoration: const InputDecoration(labelText: '+212...'),
-                    ),
-                    const SizedBox(height: 24),
-                    if (_error != null) ...[
-                      Text(_error!, style: const TextStyle(color: Colors.red)),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _save,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: fieldColor,
+                            foregroundColor: brown,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(color: brown.withOpacity(0.18)),
+                            ),
+                            textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: const Text('Enregistrer'),
+                        ),
+                      ),
                       const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          onPressed: _logout,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: brown,
+                            side: BorderSide(color: brown.withOpacity(0.5)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: const Text('Déconnexion'),
+                        ),
+                      ),
                     ],
-                    ElevatedButton(
-                      onPressed: _save,
-                      child: const Text('Save'),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton(
-                      onPressed: _logout,
-                      child: const Text('Logout'),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),

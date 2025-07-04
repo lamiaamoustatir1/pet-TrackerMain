@@ -70,6 +70,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _buildNotificationTitle(Map<String, dynamic> data) {
+    if (data['message'] != null && data['message'].toString().isNotEmpty) {
+      return Text(data['message']);
+    }
     switch (data['type']) {
       case 'purchase_request':
         return Text('Demande d\'achat pour ${data['animalName']}');
@@ -106,7 +109,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         style: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          color: Colors.green,
+          color: Color(0xFFA37551),
         ),
       );
     }
